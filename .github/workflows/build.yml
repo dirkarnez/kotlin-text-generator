@@ -1,0 +1,48 @@
+name: kotlin-build-actions-workflow
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+      
+permissions:
+    contents: write
+    
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest] # , ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - shell: bash
+        run: |
+          cd "$USERPROFILE/Downloads" && \
+          /C/msys64/usr/bin/wget.exe -nc "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.26%2B4/OpenJDK11U-jdk_x64_windows_hotspot_11.0.26_4.zip" && \
+          7z.exe x OpenJDK11U-jdk_x64_windows_hotspot_11.0.26_4.zip -o"OpenJDK11U-jdk_x64_windows_hotspot_11.0.26_4"
+          
+      - shell: bash
+        run: |
+          cd "$USERPROFILE/Downloads" && \
+          /C/msys64/usr/bin/wget.exe -nc "https://github.com/JetBrains/kotlin/releases/download/v2.1.10/kotlin-native-prebuilt-windows-x86_64-2.1.10.zip" && \
+          7z.exe x kotlin-native-prebuilt-windows-x86_64-2.1.10.zip -o"kotlin-native-prebuilt-windows-x86_64-2.1.10"
+          
+      - shell: cmd
+        run: |
+          .\local-build.cmd
+          
+      - name: Archive Release
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          path: main.exe
+          filename: "${{ github.event.repository.name }}-${{ github.ref_name }}-${{ matrix.os }}.zip"
+          
+      - name: Release prebuilt
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "${{ github.event.repository.name }}-${{ github.ref_name }}-${{ matrix.os }}.zip"
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
