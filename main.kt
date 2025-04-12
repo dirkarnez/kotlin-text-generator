@@ -26,11 +26,8 @@ class Graph<T> {
 
     fun generate(): List<T> {
         var list: List<Pair<T, MutableList<T>>> = adjacencyList.toList()
-
         val result: MutableList<T> = mutableListOf<T>()
-
-        var token = list.get(Random.nextInt(0, list.size - 1)).first
-
+        var token = list.get(Random.nextInt(0, list.size)).first
         var nextTokenList: MutableList<T>? = mutableListOf<T>()
 
         while (adjacencyList.containsKey(token)) {
@@ -38,14 +35,18 @@ class Graph<T> {
             if (nextTokenList == null) {
                 break
             }
-
+            
             if (nextTokenList.size < 1) {
                 break
             }
+            
             result.add(token)
+            
             token = nextTokenList.get(Random.nextInt(0, nextTokenList.size))
         }
+        
         result.add(token)
+        
         return result
     }
 
